@@ -1,0 +1,20 @@
+Activity 浮窗和穿透实现
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    // 可穿透点击
+    val layoutParams = window.attributes
+    layoutParams.flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+    super.onCreate(savedInstanceState)
+
+    // 浮动和背景大小设置
+    val p = window.attributes
+    p.height = ScreenUtils.getScreenHeight()
+    p.width = dp2px(200F)
+    p.y = 0
+    p.x = 0
+    p.gravity = Gravity.END
+    p.dimAmount = 0.0f
+    window.attributes = p
+}
+
+https://www.teacup.com.cn/article/284919

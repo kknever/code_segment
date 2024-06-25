@@ -106,7 +106,7 @@ class WHIPClient(private val config: WHIPClientConfig) {
         localVideoTrack = peerConnectionFactory.createVideoTrack("100", videoSource).apply {
             addSink(config.svr)
         }
-        surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", null)
+        surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", config.eglBase.eglBaseContext)
         videoCapturer?.initialize(surfaceTextureHelper, config.context, videoSource.capturerObserver)
         videoCapturer?.startCapture(640, 480, 30)
 

@@ -160,3 +160,20 @@ public class StrokeTextView extends AppCompatTextView {
     <attr name="gradientColors" format="reference"/>
     <attr name="fontAsset" format="string"/>
 </declare-styleable>
+
+// usage example
+ <com.xxx.widget.StrokeTextView
+    android:id="@+id/stv_subtitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/dp_1"
+    android:gravity="center"
+    android:includeFontPadding="false"
+    android:paddingHorizontal="@dimen/dp_2"
+    android:text="@string/login_title_desc"
+    android:textColor="#FFFFFF"
+    android:textSize="@dimen/sp_12"
+    app:fontAsset="fonts/SourceHanSansCN-Bold.otf"
+    app:strokeColor="#FF40620F"
+    app:strokeWidth="@dimen/dp_2"
+    tools:ignore="HardcodedText" />

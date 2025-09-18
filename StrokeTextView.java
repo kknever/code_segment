@@ -11,6 +11,26 @@ public class StrokeTextView extends AppCompatTextView {
     private int mGradientOrientation = HORIZONTAL;
     private String mFontAssetPath;
 
+    // ========== 跑马灯相关 ==========
+    private boolean marqueeEnabled = false;
+    private float marqueeSpeed = 2f; // 每帧移动的像素数
+    private float marqueeOffset = 0f;
+    private float textWidth = 0f;
+    private boolean isMarqueeRunning = false;
+    private final Runnable marqueeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isMarqueeRunning) return;
+            marqueeOffset += marqueeSpeed;
+            if (textWidth > 0 && marqueeOffset > textWidth + 50) { // 50为间隔
+                marqueeOffset = 0f;
+            }
+            invalidate();
+            postDelayed(this, 16); // 约60fps
+        }
+    };
+    // ========== 跑马灯相关 ==========
+
     public StrokeTextView(Context context) {
         super(context);
         init(context, null);
@@ -93,6 +113,42 @@ public class StrokeTextView extends AppCompatTextView {
         }
     }
 
+    // ========== 跑马灯相关方法 ==========
+    /**
+     * 启用跑马灯
+     */
+    public void startMarquee() {
+        if (marqueeEnabled) return;
+        marqueeEnabled = true;
+        isMarqueeRunning = true;
+        post(marqueeRunnable);
+    }
+
+    /**
+     * 停止跑马灯
+     */
+    public void stopMarquee() {
+        marqueeEnabled = false;
+        isMarqueeRunning = false;
+        removeCallbacks(marqueeRunnable);
+        marqueeOffset = 0f;
+        invalidate();
+    }
+
+    /**
+     * 设置跑马灯速度（像素/帧，默认2）
+     */
+    public void setMarqueeSpeed(float speed) {
+        this.marqueeSpeed = speed;
+    }
+    // ========== 跑马灯相关方法 ==========
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        stopMarquee();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         String text = getText() == null ? "" : getText().toString();
@@ -104,23 +160,44 @@ public class StrokeTextView extends AppCompatTextView {
         // 计算文本基线
         Paint.FontMetricsInt fontMetrics = paint.getFontMetricsInt();
         int baseline = (getHeight() - fontMetrics.bottom + fontMetrics.top) / 2 - fontMetrics.top;
-
         float x = getPaddingLeft();
         float y = baseline;
 
-        // 处理单行省略
-        int availableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
-        CharSequence ellipsized = TextUtils.ellipsize(
-                text, paint, availableWidth, TextUtils.TruncateAt.END
-        );
+        // 计算文本宽度
+        textWidth = paint.measureText(text);
 
+        // 跑马灯逻辑
+        if (marqueeEnabled && textWidth > getWidth()) {
+            canvas.save();
+            // 向左平移
+            canvas.translate(-marqueeOffset, 0);
+
+            // 画第一遍
+            drawStrokeText(canvas, text, x, y, paint);
+
+            // 画第二遍（无缝衔接）
+            canvas.translate(textWidth + 50, 0); // 50为间隔
+            drawStrokeText(canvas, text, x, y, paint);
+
+            canvas.restore();
+        } else {
+            // 处理单行省略
+            int availableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+            CharSequence ellipsized = TextUtils.ellipsize(
+                    text, paint, availableWidth, TextUtils.TruncateAt.END
+            );
+            drawStrokeText(canvas, ellipsized, x, y, paint);
+        }
+    }
+
+    private void drawStrokeText(Canvas canvas, CharSequence text, float x, float y, TextPaint paint) {
         // 1. 画描边
         if (mStrokeWidth > 0) {
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(mStrokeWidth);
             paint.setColor(mStrokeColor);
             paint.setShader(null);
-            canvas.drawText(ellipsized, 0, ellipsized.length(), x, y, paint);
+            canvas.drawText(text, 0, text.length(), x, y, paint);
         }
 
         // 2. 画文字（支持渐变）
@@ -137,7 +214,7 @@ public class StrokeTextView extends AppCompatTextView {
             paint.setShader(null);
             paint.setColor(getCurrentTextColor());
         }
-        canvas.drawText(ellipsized, 0, ellipsized.length(), x, y, paint);
+        canvas.drawText(text, 0, text.length(), x, y, paint);
     }
 
     private LinearGradient getGradient() {

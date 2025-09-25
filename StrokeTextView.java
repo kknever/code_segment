@@ -3,6 +3,8 @@ public class StrokeTextView extends AppCompatTextView {
     private static final int HORIZONTAL = 0;
     private static final int VERTICAL = 1;
 
+    private static final Map<String, Typeface> sTypefaceCache = new HashMap<>();
+
     private int[] mGradientColor;
     private int mStrokeWidth = 0;
     private int mStrokeColor = Color.BLACK;
@@ -74,14 +76,30 @@ public class StrokeTextView extends AppCompatTextView {
      */
     public void setFontAsset(String assetPath) {
         if (!TextUtils.isEmpty(assetPath)) {
-            try {
-                Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), assetPath);
+            Typeface typeface = sTypefaceCache.get(assetPath);
+            if (typeface == null) {
+                try {
+                    typeface = Typeface.createFromAsset(getContext().getAssets(), assetPath);
+                    sTypefaceCache.put(assetPath, typeface);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if (typeface != null) {
                 setTypeface(typeface);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }
+    // public void setFontAsset(String assetPath) {
+    //     if (!TextUtils.isEmpty(assetPath)) {
+    //         try {
+    //             Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), assetPath);
+    //             setTypeface(typeface);
+    //         } catch (Exception e) {
+    //             e.printStackTrace();
+    //         }
+    //     }
+    // }
 
     public void setGradientOrientation(int orientation) {
         if (mGradientOrientation != orientation) {
